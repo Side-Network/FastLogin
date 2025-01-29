@@ -25,14 +25,9 @@
  */
 package com.github.games647.fastlogin.core.message;
 
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
-
 import java.util.UUID;
 
-public class LoginActionMessage implements ChannelMessage {
-
-    public static final String FORCE_CHANNEL = "force";
+public class LoginActionMessage {
 
     private Type type;
 
@@ -59,35 +54,6 @@ public class LoginActionMessage implements ChannelMessage {
 
     public UUID getProxyId() {
         return proxyId;
-    }
-
-    @Override
-    public void readFrom(ByteArrayDataInput input) {
-        this.type = Type.values()[input.readInt()];
-
-        this.playerName = input.readUTF();
-
-        //bungeecord UUID
-        long mostSignificantBits = input.readLong();
-        long leastSignificantBits = input.readLong();
-        this.proxyId = new UUID(mostSignificantBits, leastSignificantBits);
-    }
-
-    @Override
-    public void writeTo(ByteArrayDataOutput output) {
-        output.writeInt(type.ordinal());
-
-        //Data is sent through a random player. We have to tell the Bukkit version of this plugin the target
-        output.writeUTF(playerName);
-
-        //proxy identifier to check if it's an acceptable proxy
-        output.writeLong(proxyId.getMostSignificantBits());
-        output.writeLong(proxyId.getLeastSignificantBits());
-    }
-
-    @Override
-    public String getChannelName() {
-        return FORCE_CHANNEL;
     }
 
     @Override

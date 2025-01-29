@@ -26,10 +26,9 @@
 package com.github.games647.fastlogin.bukkit;
 
 import com.comphenix.protocol.ProtocolLibrary;
-import com.github.games647.fastlogin.bukkit.command.CrackedCommand;
-import com.github.games647.fastlogin.bukkit.command.PremiumCommand;
 import com.github.games647.fastlogin.bukkit.listener.ConnectionListener;
 import com.github.games647.fastlogin.bukkit.listener.PaperCacheListener;
+import com.github.games647.fastlogin.bukkit.listener.ProtonListenerBukkit;
 import com.github.games647.fastlogin.bukkit.listener.protocollib.ProtocolLibListener;
 import com.github.games647.fastlogin.bukkit.listener.protocollib.SkinApplyListener;
 import com.github.games647.fastlogin.bukkit.listener.protocolsupport.ProtocolSupportListener;
@@ -42,6 +41,8 @@ import com.github.games647.fastlogin.core.hooks.bedrock.FloodgateService;
 import com.github.games647.fastlogin.core.hooks.bedrock.GeyserService;
 import com.github.games647.fastlogin.core.shared.FastLoginCore;
 import com.github.games647.fastlogin.core.shared.PlatformPlugin;
+import me.drepic.proton.common.ProtonManager;
+import me.drepic.proton.common.ProtonProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -80,6 +81,7 @@ public class FastLoginBukkit extends JavaPlugin implements PlatformPlugin<Comman
     private FastLoginCore<Player, CommandSender, FastLoginBukkit> core;
     private FloodgateService floodgateService;
     private GeyserService geyserService;
+    private ProtonManager protonManager;
 
     private PremiumPlaceholder premiumPlaceholder;
 
@@ -106,6 +108,9 @@ public class FastLoginBukkit extends JavaPlugin implements PlatformPlugin<Comman
 
         bungeeManager = new BungeeManager(this);
         bungeeManager.initialize();
+
+        protonManager = ProtonProvider.get();
+        protonManager.registerMessageHandlers(new ProtonListenerBukkit(this));
 
         PluginManager pluginManager = getServer().getPluginManager();
         if (bungeeManager.isEnabled()) {
@@ -143,18 +148,10 @@ public class FastLoginBukkit extends JavaPlugin implements PlatformPlugin<Comman
             pluginManager.registerEvents(new PaperCacheListener(this), this);
         }
 
-        registerCommands();
-
         if (pluginManager.isPluginEnabled("PlaceholderAPI")) {
             premiumPlaceholder = new PremiumPlaceholder(this);
             premiumPlaceholder.register();
         }
-    }
-
-    private void registerCommands() {
-        //register commands using a unique name
-        Optional.ofNullable(getCommand("premium")).ifPresent(c -> c.setExecutor(new PremiumCommand(this)));
-        Optional.ofNullable(getCommand("cracked")).ifPresent(c -> c.setExecutor(new CrackedCommand(this)));
     }
 
     private boolean initializeFloodgate() {
@@ -201,6 +198,10 @@ public class FastLoginBukkit extends JavaPlugin implements PlatformPlugin<Comman
 
     public FastLoginCore<Player, CommandSender, FastLoginBukkit> getCore() {
         return core;
+    }
+
+    public ProtonManager getProtonManager() {
+        return protonManager;
     }
 
     /**

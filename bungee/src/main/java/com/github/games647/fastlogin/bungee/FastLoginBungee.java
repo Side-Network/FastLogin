@@ -27,28 +27,23 @@ package com.github.games647.fastlogin.bungee;
 
 import com.github.games647.fastlogin.bungee.hook.BungeeAuthHook;
 import com.github.games647.fastlogin.bungee.listener.ConnectListener;
-import com.github.games647.fastlogin.bungee.listener.PluginMessageListener;
+import com.github.games647.fastlogin.bungee.listener.ProtonListenerBungee;
 import com.github.games647.fastlogin.core.CommonUtil;
 import com.github.games647.fastlogin.core.hooks.AuthPlugin;
 import com.github.games647.fastlogin.core.hooks.bedrock.BedrockService;
 import com.github.games647.fastlogin.core.hooks.bedrock.FloodgateService;
 import com.github.games647.fastlogin.core.hooks.bedrock.GeyserService;
-import com.github.games647.fastlogin.core.message.ChangePremiumMessage;
-import com.github.games647.fastlogin.core.message.ChannelMessage;
-import com.github.games647.fastlogin.core.message.NamespaceKey;
-import com.github.games647.fastlogin.core.message.SuccessMessage;
 import com.github.games647.fastlogin.core.scheduler.AsyncScheduler;
 import com.github.games647.fastlogin.core.shared.FastLoginCore;
 import com.github.games647.fastlogin.core.shared.PlatformPlugin;
 import com.google.common.collect.MapMaker;
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import me.drepic.proton.common.ProtonManager;
+import me.drepic.proton.common.ProtonProvider;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.connection.Server;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.api.plugin.PluginManager;
@@ -75,6 +70,7 @@ public class FastLoginBungee extends Plugin implements PlatformPlugin<CommandSen
     private FloodgateService floodgateService;
     private GeyserService geyserService;
     private Logger logger;
+    private ProtonManager protonManager;
 
     @Override
     public void onEnable() {
@@ -86,6 +82,9 @@ public class FastLoginBungee extends Plugin implements PlatformPlugin<CommandSen
         if (!core.setupDatabase()) {
             return;
         }
+
+        protonManager = ProtonProvider.get();
+        protonManager.registerMessageHandlers(new ProtonListenerBungee(this));
 
         if (isPluginInstalled("floodgate")) {
             floodgateService = new FloodgateService(FloodgateApi.getInstance(), core);
@@ -100,11 +99,6 @@ public class FastLoginBungee extends Plugin implements PlatformPlugin<CommandSen
 
         Listener connectListener = new ConnectListener(this, core.getAntiBotService());
         pluginManager.registerListener(this, connectListener);
-        pluginManager.registerListener(this, new PluginMessageListener(this));
-
-        //this is required to listen to incoming messages from the server
-        getProxy().registerChannel(NamespaceKey.getCombined(getName(), ChangePremiumMessage.CHANGE_CHANNEL));
-        getProxy().registerChannel(NamespaceKey.getCombined(getName(), SuccessMessage.SUCCESS_CHANNEL));
 
         registerHook();
     }
@@ -122,6 +116,10 @@ public class FastLoginBungee extends Plugin implements PlatformPlugin<CommandSen
 
     public ConcurrentMap<PendingConnection, BungeeLoginSession> getSession() {
         return session;
+    }
+
+    public ProtonManager getProtonManager() {
+        return protonManager;
     }
 
     private void registerHook() {
@@ -144,16 +142,6 @@ public class FastLoginBungee extends Plugin implements PlatformPlugin<CommandSen
             }
         } catch (ReflectiveOperationException ex) {
             logger.error("Couldn't load the auth hook class", ex);
-        }
-    }
-
-    public void sendPluginMessage(Server server, ChannelMessage message) {
-        if (server != null) {
-            ByteArrayDataOutput dataOutput = ByteStreams.newDataOutput();
-            message.writeTo(dataOutput);
-
-            NamespaceKey channel = new NamespaceKey(getName(), message.getChannelName());
-            server.sendData(channel.getCombinedName(), dataOutput.toByteArray());
         }
     }
 

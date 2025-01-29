@@ -28,29 +28,24 @@ package com.github.games647.fastlogin.velocity;
 import com.github.games647.fastlogin.core.hooks.bedrock.BedrockService;
 import com.github.games647.fastlogin.core.hooks.bedrock.FloodgateService;
 import com.github.games647.fastlogin.core.hooks.bedrock.GeyserService;
-import com.github.games647.fastlogin.core.message.ChangePremiumMessage;
-import com.github.games647.fastlogin.core.message.ChannelMessage;
-import com.github.games647.fastlogin.core.message.SuccessMessage;
 import com.github.games647.fastlogin.core.scheduler.AsyncScheduler;
 import com.github.games647.fastlogin.core.shared.FastLoginCore;
 import com.github.games647.fastlogin.core.shared.PlatformPlugin;
 import com.github.games647.fastlogin.velocity.listener.ConnectListener;
-import com.github.games647.fastlogin.velocity.listener.PluginMessageListener;
+import com.github.games647.fastlogin.velocity.listener.ProtonListenerVelocity;
 import com.google.common.collect.MapMaker;
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import com.velocitypowered.api.proxy.messages.ChannelMessageSink;
-import com.velocitypowered.api.proxy.messages.ChannelRegistrar;
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import me.drepic.proton.common.ProtonManager;
+import me.drepic.proton.common.ProtonProvider;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.geysermc.floodgate.api.FloodgateApi;
 import org.geysermc.geyser.GeyserImpl;
@@ -69,6 +64,9 @@ import java.util.concurrent.ConcurrentMap;
 
 //TODO: Support for floodgate
 @Plugin(id = PomData.NAME, name = PomData.DISPLAY_NAME, description = PomData.DESCRIPTION, url = PomData.URL,
+        dependencies = {
+                @Dependency(id = "realmsproxy"),
+        },
         version = PomData.VERSION, authors = {"games647", "https://github.com/games647/FastLogin/graphs/contributors"})
 public class FastLoginVelocity implements PlatformPlugin<CommandSource> {
 
@@ -83,6 +81,7 @@ public class FastLoginVelocity implements PlatformPlugin<CommandSource> {
     private FloodgateService floodgateService;
     private GeyserService geyserService;
     private UUID proxyId;
+    private ProtonManager protonManager;
 
     @Inject
     public FastLoginVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
@@ -101,6 +100,9 @@ public class FastLoginVelocity implements PlatformPlugin<CommandSource> {
             return;
         }
 
+        protonManager = ProtonProvider.get();
+        protonManager.registerMessageHandlers(new ProtonListenerVelocity(this));
+
         if (isPluginInstalled("floodgate")) {
             floodgateService = new FloodgateService(FloodgateApi.getInstance(), core);
         }
@@ -110,11 +112,7 @@ public class FastLoginVelocity implements PlatformPlugin<CommandSource> {
         }
 
         server.getEventManager().register(this, new ConnectListener(this, core.getAntiBotService()));
-        server.getEventManager().register(this, new PluginMessageListener(this));
-
-        ChannelRegistrar channelRegistry = server.getChannelRegistrar();
-        channelRegistry.register(MinecraftChannelIdentifier.create(getName(), ChangePremiumMessage.CHANGE_CHANNEL));
-        channelRegistry.register(MinecraftChannelIdentifier.create(getName(), SuccessMessage.SUCCESS_CHANNEL));
+        server.getEventManager().register(this, new ProtonListenerVelocity(this));
     }
 
     @Subscribe
@@ -162,6 +160,10 @@ public class FastLoginVelocity implements PlatformPlugin<CommandSource> {
         return geyserService;
     }
 
+    public ProtonManager getProtonManager() {
+        return protonManager;
+    }
+
     @Override
     public BedrockService<?> getBedrockService() {
         if (floodgateService != null) {
@@ -181,16 +183,6 @@ public class FastLoginVelocity implements PlatformPlugin<CommandSource> {
 
     public ProxyServer getProxy() {
         return server;
-    }
-
-    public void sendPluginMessage(ChannelMessageSink server, ChannelMessage message) {
-        if (server != null) {
-            ByteArrayDataOutput dataOutput = ByteStreams.newDataOutput();
-            message.writeTo(dataOutput);
-
-            MinecraftChannelIdentifier channel = MinecraftChannelIdentifier.create(getName(), message.getChannelName());
-            server.sendPluginMessage(channel, dataOutput.toByteArray());
-        }
     }
 
     private void loadOrGenerateProxyId() {

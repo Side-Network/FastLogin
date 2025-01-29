@@ -15,6 +15,7 @@ dev-url: ${project.url}
 api-version: '1.13'
 
 softdepend:
+    - Proton
     # We depend on either ProtocolLib or ProtocolSupport
     - ProtocolSupport
     - ProtocolLib

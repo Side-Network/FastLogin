@@ -28,7 +28,6 @@ package com.github.games647.fastlogin.bungee.task;
 import com.github.games647.fastlogin.bungee.BungeeLoginSession;
 import com.github.games647.fastlogin.bungee.FastLoginBungee;
 import com.github.games647.fastlogin.bungee.event.BungeeFastLoginAutoLoginEvent;
-import com.github.games647.fastlogin.core.message.ChannelMessage;
 import com.github.games647.fastlogin.core.message.LoginActionMessage;
 import com.github.games647.fastlogin.core.message.LoginActionMessage.Type;
 import com.github.games647.fastlogin.core.shared.FastLoginCore;
@@ -108,9 +107,9 @@ public class ForceLoginTask
         }
 
         UUID proxyId = UUID.fromString(ProxyServer.getInstance().getConfig().getUuid());
-        ChannelMessage loginMessage = new LoginActionMessage(type, player.getName(), proxyId);
+        LoginActionMessage loginMessage = new LoginActionMessage(type, player.getName(), proxyId);
 
-        core.getPlugin().sendPluginMessage(server, loginMessage);
+        core.getPlugin().getProtonManager().send("FastLogin", "login", loginMessage, "realmsLobby");
     }
 
     @Override

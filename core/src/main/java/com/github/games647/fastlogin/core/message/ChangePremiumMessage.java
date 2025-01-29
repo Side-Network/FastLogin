@@ -25,29 +25,26 @@
  */
 package com.github.games647.fastlogin.core.message;
 
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
-
-public class ChangePremiumMessage implements ChannelMessage {
-
-    public static final String CHANGE_CHANNEL = "ch-st";
+public class ChangePremiumMessage {
 
     private String playerName;
+    private String forPlayer;
     private boolean willEnable;
     private boolean isSourceInvoker;
 
-    public ChangePremiumMessage(String playerName, boolean willEnable, boolean isSourceInvoker) {
+    public ChangePremiumMessage(String playerName, String forPlayer, boolean willEnable, boolean isSourceInvoker) {
         this.playerName = playerName;
+        this.forPlayer = forPlayer;
         this.willEnable = willEnable;
         this.isSourceInvoker = isSourceInvoker;
     }
 
-    public ChangePremiumMessage() {
-        //reading from
-    }
-
     public String getPlayerName() {
         return playerName;
+    }
+
+    public String getForPlayer() {
+        return forPlayer;
     }
 
     public boolean shouldEnable() {
@@ -56,25 +53,6 @@ public class ChangePremiumMessage implements ChannelMessage {
 
     public boolean isSourceInvoker() {
         return isSourceInvoker;
-    }
-
-    @Override
-    public String getChannelName() {
-        return CHANGE_CHANNEL;
-    }
-
-    @Override
-    public void readFrom(ByteArrayDataInput input) {
-        willEnable = input.readBoolean();
-        playerName = input.readUTF();
-        isSourceInvoker = input.readBoolean();
-    }
-
-    @Override
-    public void writeTo(ByteArrayDataOutput output) {
-        output.writeBoolean(willEnable);
-        output.writeUTF(playerName);
-        output.writeBoolean(isSourceInvoker);
     }
 
     @Override

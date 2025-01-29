@@ -130,6 +130,11 @@
             <id>opencollab</id>
             <url>https://repo.opencollab.dev/main/</url>
         </repository>
+
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -208,6 +213,13 @@
             <groupId>org.geysermc.floodgate</groupId>
             <artifactId>api</artifactId>
             <version>${floodgate.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.mcgrizzz</groupId>
+            <artifactId>Proton</artifactId>
+            <version>v1.3.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

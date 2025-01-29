@@ -25,7 +25,6 @@
  */
 package com.github.games647.fastlogin.velocity.task;
 
-import com.github.games647.fastlogin.core.message.ChannelMessage;
 import com.github.games647.fastlogin.core.message.LoginActionMessage;
 import com.github.games647.fastlogin.core.message.LoginActionMessage.Type;
 import com.github.games647.fastlogin.core.shared.FastLoginCore;
@@ -119,8 +118,9 @@ public class ForceLoginTask
         core.getPlugin().getLog().info("Sending force {} for {} towards server {}", type, player.getUsername(), server);
 
         UUID proxyId = core.getPlugin().getProxyId();
-        ChannelMessage loginMessage = new LoginActionMessage(type, player.getUsername(), proxyId);
-        core.getPlugin().sendPluginMessage(server, loginMessage);
+        LoginActionMessage loginMessage = new LoginActionMessage(type, player.getUsername(), proxyId);
+
+        core.getPlugin().getProtonManager().send("FastLogin", "login", loginMessage, "realmsLobby");
     }
 
     @Override

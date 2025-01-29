@@ -238,5 +238,12 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/BungeeAuth-1.4.jar</systemPath>
         </dependency>
+
+        <dependency>
+            <groupId>com.github.mcgrizzz</groupId>
+            <artifactId>Proton</artifactId>
+            <version>v1.3.0</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

@@ -27,7 +27,6 @@ package com.github.games647.fastlogin.bukkit.command;
 
 import com.github.games647.fastlogin.bukkit.FastLoginBukkit;
 import com.github.games647.fastlogin.core.message.ChangePremiumMessage;
-import com.github.games647.fastlogin.core.message.ChannelMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -75,9 +74,12 @@ public abstract class ToggleCommand implements CommandExecutor {
     }
 
     protected void sendBungeeActivateMessage(CommandSender invoker, String target, boolean activate) {
+        // todo: most likely this invoker type is no longer possible, need to test
         if (invoker instanceof PluginMessageRecipient) {
-            ChannelMessage message = new ChangePremiumMessage(target, activate, true);
-            plugin.getBungeeManager().sendPluginMessage((PluginMessageRecipient) invoker, message);
+            plugin.getProtonManager().send(
+                    "FastLogin", "change-premium",
+                    new ChangePremiumMessage(target, invoker.getName(), activate, true), "realmsProxy"
+            );
         } else {
             Optional<? extends Player> optPlayer = Bukkit.getServer().getOnlinePlayers().stream().findFirst();
             if (!optPlayer.isPresent()) {
@@ -85,9 +87,10 @@ public abstract class ToggleCommand implements CommandExecutor {
                 return;
             }
 
-            Player sender = optPlayer.get();
-            ChannelMessage message = new ChangePremiumMessage(target, activate, false);
-            plugin.getBungeeManager().sendPluginMessage(sender, message);
+            plugin.getProtonManager().send(
+                    "FastLogin", "change-premium",
+                    new ChangePremiumMessage(target, optPlayer.get().getName(), activate, false), "realmsProxy"
+            );
         }
     }
 }

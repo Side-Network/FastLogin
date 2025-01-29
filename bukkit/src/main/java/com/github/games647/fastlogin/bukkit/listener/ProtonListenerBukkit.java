@@ -32,43 +32,28 @@ import com.github.games647.fastlogin.core.PremiumStatus;
 import com.github.games647.fastlogin.core.hooks.AuthPlugin;
 import com.github.games647.fastlogin.core.message.LoginActionMessage;
 import com.github.games647.fastlogin.core.message.LoginActionMessage.Type;
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteStreams;
+import me.drepic.proton.common.message.MessageHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.messaging.PluginMessageListener;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
 /**
  * Responsible for receiving messages from a BungeeCord instance.
- * <p>
- * This class also receives the plugin message from the bungeecord version of this plugin in order to get notified if
- * the connection is in online mode.
  */
-public class BungeeListener implements PluginMessageListener {
+public class ProtonListenerBukkit {
 
     private final FastLoginBukkit plugin;
 
-    public BungeeListener(FastLoginBukkit plugin) {
+    public ProtonListenerBukkit(FastLoginBukkit plugin) {
         this.plugin = plugin;
     }
 
-    @Override
-    public void onPluginMessageReceived(@NotNull String channel, Player player, byte[] message) {
-        ByteArrayDataInput dataInput = ByteStreams.newDataInput(message);
-
-        LoginActionMessage loginMessage = new LoginActionMessage();
-        loginMessage.readFrom(dataInput);
-
+    @MessageHandler(namespace = "FastLogin", subject = "login")
+    public void onPlayerLogin(LoginActionMessage loginMessage) {
         plugin.getLog().debug("Received plugin message {}", loginMessage);
 
-        Player targetPlayer = player;
-        if (!loginMessage.getPlayerName().equals(player.getName())) {
-            targetPlayer = Bukkit.getPlayerExact(loginMessage.getPlayerName());
-        }
-
+        Player targetPlayer = Bukkit.getPlayerExact(loginMessage.getPlayerName());
         if (targetPlayer == null) {
             plugin.getLog().warn("Force action player {} not found", loginMessage.getPlayerName());
             return;

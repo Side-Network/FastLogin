@@ -29,7 +29,6 @@ import com.github.games647.fastlogin.bukkit.BukkitLoginSession;
 import com.github.games647.fastlogin.bukkit.FastLoginBukkit;
 import com.github.games647.fastlogin.bukkit.event.BukkitFastLoginAutoLoginEvent;
 import com.github.games647.fastlogin.core.PremiumStatus;
-import com.github.games647.fastlogin.core.message.SuccessMessage;
 import com.github.games647.fastlogin.core.shared.FastLoginCore;
 import com.github.games647.fastlogin.core.shared.ForceLoginManagement;
 import com.github.games647.fastlogin.core.shared.LoginSession;
@@ -81,7 +80,7 @@ public class ForceLoginTask extends ForceLoginManagement<Player, CommandSender, 
     @Override
     public void onForceActionSuccess(LoginSession session) {
         if (core.getPlugin().getBungeeManager().isEnabled()) {
-            core.getPlugin().getBungeeManager().sendPluginMessage(player, new SuccessMessage());
+            core.getPlugin().getProtonManager().send("FastLogin", "success", player.getName(), "realmsProxy");
         }
     }
 

@@ -25,16 +25,8 @@
  */
 package com.github.games647.fastlogin.bukkit;
 
-import com.github.games647.fastlogin.bukkit.listener.BungeeListener;
-import com.github.games647.fastlogin.core.message.ChannelMessage;
-import com.github.games647.fastlogin.core.message.LoginActionMessage;
-import com.github.games647.fastlogin.core.message.NamespaceKey;
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 import org.bukkit.Bukkit;
-import org.bukkit.Server;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.messaging.PluginMessageRecipient;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -48,8 +40,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static com.github.games647.fastlogin.core.message.ChangePremiumMessage.CHANGE_CHANNEL;
-import static com.github.games647.fastlogin.core.message.SuccessMessage.SUCCESS_CHANNEL;
 import static java.util.stream.Collectors.toSet;
 
 public class BungeeManager {
@@ -74,16 +64,6 @@ public class BungeeManager {
         Bukkit.getOnlinePlayers().forEach(player -> player.removeMetadata(plugin.getName(), plugin));
     }
 
-    public void sendPluginMessage(PluginMessageRecipient player, ChannelMessage message) {
-        if (player != null) {
-            ByteArrayDataOutput dataOutput = ByteStreams.newDataOutput();
-            message.writeTo(dataOutput);
-
-            NamespaceKey channel = new NamespaceKey(plugin.getName(), message.getChannelName());
-            player.sendPluginMessage(plugin, channel.getCombinedName(), dataOutput.toByteArray());
-        }
-    }
-
     public boolean isEnabled() {
         return enabled;
     }
@@ -97,7 +77,6 @@ public class BungeeManager {
                 plugin.getLog().info("No valid IDs found. Minecraft proxy support cannot work in the current state");
             }
 
-            registerPluginChannels();
             plugin.getLog().info("Found enabled proxy configuration");
             plugin.getLog().info("Remember to follow the proxy guide to complete your setup");
         } else {
@@ -153,21 +132,6 @@ public class BungeeManager {
         }
 
         return false;
-    }
-
-    private void registerPluginChannels() {
-        Server server = Bukkit.getServer();
-
-        // check for incoming messages from the bungeecord version of this plugin
-        String groupId = plugin.getName();
-        String forceChannel = NamespaceKey.getCombined(groupId, LoginActionMessage.FORCE_CHANNEL);
-        server.getMessenger().registerIncomingPluginChannel(plugin, forceChannel, new BungeeListener(plugin));
-
-        // outgoing
-        String successChannel = new NamespaceKey(groupId, SUCCESS_CHANNEL).getCombinedName();
-        String changeChannel = new NamespaceKey(groupId, CHANGE_CHANNEL).getCombinedName();
-        server.getMessenger().registerOutgoingPluginChannel(plugin, successChannel);
-        server.getMessenger().registerOutgoingPluginChannel(plugin, changeChannel);
     }
 
     private Set<UUID> loadBungeeCordIds() {
